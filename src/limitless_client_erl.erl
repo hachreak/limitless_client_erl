@@ -15,28 +15,31 @@
 %%% along with this software; if not, write to the Free Software Foundation,
 %%% Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 %%%
-%% @doc limitless_client_erl app
+%% @doc limitless_client_erl public API
 %% @end
 
--module(limitless_client_erl_app).
+-module(limitless_client_erl).
 
 -author('Leonardo Rossi <leonardo.rossi@studenti.unipr.it>').
 
--behaviour(application).
-
-%% Application callbacks
--export([start/2, stop/1]).
+-export([
+  is_reached_object_id/2,
+  setup_objectid/3
+]).
 
 %%====================================================================
 %% API
 %%====================================================================
 
-start(_StartType, _StartArgs) ->
-    limitless_client_erl_sup:start_link().
+is_reached_object_id(PoolName, ObjectId) ->
+  poolboy:transaction(PoolName, fun(Worker) ->
+      gen_server:call(Worker, {is_reached_object_id, ObjectId})
+    end).
 
-%%--------------------------------------------------------------------
-stop(_State) ->
-    ok.
+setup_objectid(PoolName, ObjectId, GroupId) ->
+  poolboy:transaction(PoolName, fun(Worker) ->
+      gen_server:call(Worker, {setup_objectid, ObjectId, GroupId})
+    end).
 
 %%====================================================================
 %% Internal functions

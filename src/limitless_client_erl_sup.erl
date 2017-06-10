@@ -45,8 +45,23 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+  RestartStrategy = {one_for_all, 0, 1},
+  PoolSpecs = setup(config()),
+  {ok, {RestartStrategy, PoolSpecs}}.
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+config() ->
+  {ok, Pools} = application:get_env(limitless_client_erl, pools),
+  Retries = application:get_env(limitless_client_erl, retry, 20),
+  {Pools, Retries}.
+
+setup({Pools, Retries}) ->
+  lists:map(fun({Name, SizeArgs, WorkerArgs}) ->
+      PoolArgs = [
+          {name, {local, Name}}, {worker_module, limitless_client_erl_worker}
+        ] ++ SizeArgs,
+      poolboy:child_spec(Name, PoolArgs, {maps:from_list(WorkerArgs), Retries})
+    end, Pools).

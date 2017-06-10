@@ -15,29 +15,35 @@
 %%% along with this software; if not, write to the Free Software Foundation,
 %%% Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 %%%
-%% @doc limitless_client_erl app
+%% @doc limitless client coder
 %% @end
 
--module(limitless_client_erl_app).
+-module(limitless_client_erl_coder).
 
 -author('Leonardo Rossi <leonardo.rossi@studenti.unipr.it>').
 
--behaviour(application).
-
 %% Application callbacks
--export([start/2, stop/1]).
+-export([
+  decode/1,
+  encode/2,
+  encode/3
+]).
 
 %%====================================================================
-%% API
+%% API connection
 %%====================================================================
 
-start(_StartType, _StartArgs) ->
-    limitless_client_erl_sup:start_link().
+-spec encode(binary(), binary()) -> binary().
+encode(Method, Path) ->
+  encode(Method, Path, #{}).
 
-%%--------------------------------------------------------------------
-stop(_State) ->
-    ok.
+-spec encode(binary(), binary(), map()) -> binary().
+encode(Method, Path, Args) ->
+  Packet = Args#{<<"method">> => Method, <<"path">> => Path},
+  jsx:encode(Packet).
 
-%%====================================================================
-%% Internal functions
-%%====================================================================
+-spec decode(binary()) -> {atom(), map()}.
+decode(Packet) ->
+  #{<<"result">> := Result,
+    <<"context">> := Context} = jsx:decode(Packet, [return_maps]),
+  {list_to_atom(binary_to_list(Result)), Context}.

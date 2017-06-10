@@ -3,8 +3,9 @@
   {vsn, "0.1.0"},
   {registered, []},
   {mod, { limitless_client_erl_app, []}},
-  {applications,
-   [kernel,
+  {applications, [
+    jsx,
+    kernel,
     stdlib
    ]},
   {env,[]},
